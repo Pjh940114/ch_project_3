@@ -72,7 +72,7 @@ def board_crawling(theme, rank_n, pages, endyear):
                 data = [column.get_text().strip() for column in columns]
                 # print(data)
                 
-                if data[0][:4] == str(endyear -1): # endyear 는 년도를 설정해서 일정 년도가 되면 크롤링을 멈춤
+                if data[0][:4] == str(endyear - 1): # endyear 는 년도를 설정해서 일정 년도가 되면 크롤링을 멈춤
                     break
                 
                 writer.writerow(data)

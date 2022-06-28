@@ -1,3 +1,4 @@
+# 필요한 모듈
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -31,8 +32,6 @@ def board_crawling(theme, rank_n, pages, endyear):
     # 테마별 시가총액을 담는 리스트
     theme_stockcap_li = []
     
-    # 시총 1위 기업 담는 리스트
-    tmp_stock = ['', '', '', '', '', '', '', '', '', '', 0, '']
     for i in range(1,8):
         browser.find_element(By.LINK_TEXT, "{}".format(i)).click()
         time.sleep(1)

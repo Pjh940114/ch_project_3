@@ -26,7 +26,10 @@ def init(theme):
 def board_crawling(theme, rank_n, pages, endyear):
     
     # 테마별 종목 이름 담는 리스트
-    theme_stock_li = []
+    theme_stockname_li = []
+    
+    # 테마별 시가총액을 담는 리스트
+    theme_stockcap_li = []
     
     # 시총 1위 기업 담는 리스트
     tmp_stock = ['', '', '', '', '', '', '', '', '', '', 0, '']
@@ -63,25 +66,28 @@ def board_crawling(theme, rank_n, pages, endyear):
                 continue
             stock = [column.get_text().strip() for column in stock_columns]
             # print(stock[10]) # 시가총액
-            theme_stock_li.append(stock[0])
             
             stock[10] = re.sub(r'[^0-9]', '', stock[10])
-            if int(tmp_stock[10]) < int(stock[10]):
+            
+            theme_stockname_li.append(stock[0])
+            theme_stockcap_li.append(stock[10])
+            
+            if int(stock[10]) >= int(tmp_stock[10]):
                 tmp_stock = stock
-                
-        # print("테마 중 시총 1등 :", tmp_stock[0])
-        # print("인덱스 : ", theme_stock_li.index(tmp_stock[0]))
         
-        # 테마 중 시가총액 1위 기업 index
-        stock_idx = int(theme_stock_li.index(tmp_stock[0])) + 1
+        theme_stockcap_li = list(map(int, theme_stockcap_li))
+        theme_stockcap_li = {(i + 1): theme_stockcap_li[i] for i in range(0, len(theme_stockcap_li))}
+        theme_stockcap_li = dict(sorted(theme_stockcap_li.items(), key=lambda x: x[1], reverse=True))
+        
+        # 테마 중 시가총액 상위 rank_n 개
+        theme_top = list(theme_stockcap_li.keys())[:rank_n]
 
         # 주식 토론실 경로
-        # 테마별 상위 range개 (x)
-        # 테마 중 시가총액 1위 기업
-        for i in range(1,rank_n + 1):
+        # 테마별 시가총액 상위 rank_n개
+        for i in theme_top:
             
             # 주식 토론방 경로
-            board_xpath = '//*[@id="contentarea"]/div[4]/table/tbody/tr[{}]/td[12]/a/img'.format(stock_idx)
+            board_xpath = '//*[@id="contentarea"]/div[4]/table/tbody/tr[{}]/td[12]/a/img'.format(i)
             # 주식 이름 경로
             name_xpath = '//*[@id="contentarea"]/div[4]/table/tbody/tr[{}]/td[1]/div/a'.format(i)
             
@@ -89,7 +95,8 @@ def board_crawling(theme, rank_n, pages, endyear):
             stockname = browser.find_element(By.XPATH, name_xpath).text
             # print(stockname.text)
                 
-            filename = stockname + "_종토방 데이터" + ".csv"
+            # filename = "1_종목명_종토방 데이터.csv"
+            filename = str(theme_top.index(i)+1) + "_" + stockname + "_종토방 데이터" + ".csv"
             f = open(filename, "w",  encoding="utf-8-sig", newline="")
             writer = csv.writer(f)
 
@@ -136,8 +143,8 @@ def board_crawling(theme, rank_n, pages, endyear):
 # 테마 입력
 theme = '제지'
 
-# '탈모 치료 관련주' 상위 5개 1 ~ 20페이지 2022년도
-board_crawling(theme, rank_n = 2, pages = 2, endyear = 2022)
+# theme 별 시가총액 상위 5개 1 ~ pages, endyear년도
+board_crawling(theme, rank_n = 5, pages = 2, endyear = 2022)
 
 '''
 # 변수 설명

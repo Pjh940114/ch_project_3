@@ -109,7 +109,6 @@ def board_crawling(theme, stocklist, pages, endyear):
                 # filename = "1_종목명_종토방 데이터.csv"
                 # filename = str(theme_top.index(theme_top[i])+1) + "_" + theme_top[i] + "_종토방 데이터" + ".csv"
                 
-                # filename = "종목명_종토방 데이터.csv"
                 filename = "naver_board_" + str(i) + ".csv"
                 f = open(filename, "w",  encoding="utf-8-sig", newline="")
                 writer = csv.writer(f)

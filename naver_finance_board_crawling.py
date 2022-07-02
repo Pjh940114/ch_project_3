@@ -11,7 +11,10 @@ import re
 # 네이버 증권 -> 테마
 url = 'https://finance.naver.com/sise/theme.naver?&page=1'
 browser = webdriver.Chrome()
-browser.maximize_window()
+# browser.maximize_window()
+browser.set_window_position(1000,0)
+# browser.set_window_size(1000,1000)
+
 time.sleep(0.5)
 browser.get(url)
 
@@ -24,7 +27,7 @@ def init(theme):
     time.sleep(1)
 
 # 크롤링 및 파일 저장
-def board_crawling(theme, rank_n, pages, endyear):
+def board_crawling(theme, stocklist, pages, endyear):
     
     # 테마별 종목 이름 담는 리스트
     theme_stockname_li = []
@@ -87,18 +90,27 @@ def board_crawling(theme, rank_n, pages, endyear):
             # print(list(theme_name_cap_li.keys())[:5])
             
             # 테마 중 시가총액 상위 rank_n 개
-            theme_top = list(theme_name_cap_li.keys())[:rank_n]
-            print("상위 5개 기업 :", theme_top)
+            # theme_top = list(theme_name_cap_li.keys())[:rank_n]
+            # print("상위 5개 기업 :", theme_top)
             
-            for i in range(rank_n):
+            stocklist = stocklist
+            # stocklist = ['LG화학', '삼성SDI', 'SK이노베이션', '고려아연', '포스코케미칼']
+            for i in stocklist:
+            # for i in range(rank_n):
                 
-                browser.find_element(By.LINK_TEXT, list(theme_name_cap_li.keys())[i]).click()
+                # browser.find_element(By.LINK_TEXT, list(theme_name_cap_li.keys())[i]).click()
+                crawling_stock = browser.find_element(By.LINK_TEXT, i)
+                crawling_stock.click()
+                # print(crawling_stock.text)
                 
                 # 주식 토론방 경로
                 board_xpath = '//*[@id="content"]/ul/li[7]/a'
                     
                 # filename = "1_종목명_종토방 데이터.csv"
-                filename = str(theme_top.index(theme_top[i])+1) + "_" + theme_top[i] + "_종토방 데이터" + ".csv"
+                # filename = str(theme_top.index(theme_top[i])+1) + "_" + theme_top[i] + "_종토방 데이터" + ".csv"
+                
+                # filename = "종목명_종토방 데이터.csv"
+                filename = "naver_board_" + str(i) + ".csv"
                 f = open(filename, "w",  encoding="utf-8-sig", newline="")
                 writer = csv.writer(f)
 
@@ -114,8 +126,7 @@ def board_crawling(theme, rank_n, pages, endyear):
                 # range 까지의 범위 페이지 크롤링
                 try:
                     for page in range(1, pages + 1):
-                    
-                        board_pages = browser.find_element(By.LINK_TEXT, "{}".format(page))
+                        board_pages = browser.find_element(By.LINK_TEXT, "{}".format(format(page, ',')))
                         board_pages.click()
                         time.sleep(1)
                             
@@ -124,12 +135,13 @@ def board_crawling(theme, rank_n, pages, endyear):
                         
                         data_rows = soup.find("table", attrs = {"class" : "type2"}).find("tbody").find_all("tr")
 
-                        for row in data_rows:
+                        for idx, row in enumerate(data_rows):
                             columns = row.find_all("td")
                             if len(columns) <=1:
                                 continue
                             data = [column.get_text().strip() for column in columns]
-                            # print(data)
+                            full_text = browser.find_element(By.XPATH, f'//*[@id="content"]/div[2]/table[1]/tbody/tr[{idx+1}]/td[2]/a').get_attribute('title')
+                            data[1] = full_text
                             
                             if data[0][:4] == str(endyear - 1): # endyear 는 년도를 설정해서 일정 년도가 csv 작성 중지
                                 aucrawling = False
@@ -145,8 +157,15 @@ def board_crawling(theme, rank_n, pages, endyear):
 
                         # 페이지가 10이 될 경우 다음을 누르고 크롤링 계속 이어감
                         if page % 10 == 0:
-                            board_pages = browser.find_element(By.LINK_TEXT, "다음")
-                            board_pages.click()
+                            # soup.find("td", attrs = {"class" : "pgR"})
+                            # board_pages = browser.find_element(By.LINK_TEXT, "다음")
+                            board_pages = browser.find_element(By.XPATH, '//*[@id="content"]/div[2]/table[2]/tbody/tr/td[2]/table/tbody/tr/td[12]/a')
+                            if board_pages.text == '다음':
+                                board_pages.click()
+                            else:
+                               board_pages = browser.find_element(By.XPATH, '//*[@id="content"]/div[2]/table[2]/tbody/tr/td[2]/table/tbody/tr/td[13]/a')
+                               board_pages.click()
+                                
 
                     browser.get(cnt_url)  
                     aucrawling = True
@@ -154,10 +173,13 @@ def board_crawling(theme, rank_n, pages, endyear):
                     continue
                 
 # 테마 입력
-theme = '제지'
+theme = '2차전지'
+stocklist = ['LG화학', '삼성SDI', 'SK이노베이션', '고려아연', '포스코케미칼']
+# stocklist = ['SK이노베이션']
 
 # theme 별 시가총액 상위 5개 1 ~ pages, endyear년도
-board_crawling(theme, rank_n = 5, pages = 30, endyear = 2022)
+board_crawling(theme, stocklist, pages = 10000, endyear = 2021)
+# board_crawling(theme, rank_n = 5, pages = 3000, endyear = 2021)
 
 '''
 # 변수 설명
